@@ -15,6 +15,10 @@
 package cwdemangler;
 
 import java.util.ArrayList;
+import java.nio.file.*;
+import java.io.IOException;
+import java.nio.charset.*;
+import java.util.List;
 
 public class CodeWarriorDemangler {
 	
@@ -33,9 +37,9 @@ public class CodeWarriorDemangler {
 			
 			if(option.equals("help"))
 			{
-				System.out.println("Usage: cwd [STRING]...");
+				System.out.println("Usage: cwd [FILE]...");
 				System.out.println("   or: cwd OPTION");
-				System.out.println("Output a demangled CodeWarrior symbol name for all specified STRING(s).");
+				System.out.println("Output demangled CodeWarrior symbol names for all lines in a FILE.");
 				System.out.println();
 				System.out.println("--help      display this help and exit");
 				System.out.println("--version   output version information and exit");
@@ -54,14 +58,32 @@ public class CodeWarriorDemangler {
 				System.out.println("See the License for the specific language governing permissions and");
 				System.out.println("limitations under the License.");
 				System.out.println();
-				System.out.println("Written by TheSunCat. Demangling by Cuyler36.");
+				System.out.println("Written by TheSunCat. Demangling by Cuyler36. Fork by Lord-Giganticus");
 			}
 			
 			return;
 		}
-		
-		for(String s : args)
-			System.out.println(demangleSymbol(s).getSignature());
+		Charset charset = StandardCharsets.UTF_8;
+		for(String s : args) {
+			Path p = Paths.get(s);
+			try {
+				List<String> lines = Files.readAllLines(p, charset);
+				
+				for (String line: lines) {
+					try {
+					String arg = line.split("=")[0];
+					String address = line.split("=")[1];
+					DemangledObject symbol = demangleSymbol(arg);
+						System.out.println(symbol.getSignature() + "=" + address);
+					} catch (Exception e) {
+						System.out.println("Demangle failed");
+					}
+					
+				}
+			} catch (IOException ex) {
+	            System.out.format("I/O error: %s%n", ex);
+	        }
+		}	
 	}
     
     public String str;
